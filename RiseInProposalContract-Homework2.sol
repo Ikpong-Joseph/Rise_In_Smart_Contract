@@ -55,7 +55,7 @@ contract ProposalContract {
         uint i;  // Declare `i`
         for (i = 0; i < Voters.length; i++) {
             if (msg.sender == Voters[i]) {
-                revert("You've already voted pal!");
+                revert("Already voted pal.");
             }
         }
         Voters.push(msg.sender);  // Add voter to the list
