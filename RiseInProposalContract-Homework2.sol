@@ -8,6 +8,7 @@ contract ProposalContract {
     address public owner;
     address[] Voters; //Stores voters address
 
+
     struct Proposal {
         string title;
         string description; // Description of the proposal
@@ -17,27 +18,22 @@ contract ProposalContract {
         uint256 total_vote_to_end; // When the total votes in the proposal reaches this limit, proposal ends
         bool current_state; // This shows the current state of the proposal, meaning whether if passes of fails
         bool is_active; // This shows if others can vote to our contract
-        uint currentProposalID;
     
     }
 
     Proposal proposal;
 
-    mapping(uint256 => Proposal) proposal_history; // Recordings of previous proposals
-    mapping(string title => Proposal) findProposalByTitle;
-    
-
 
     //The rest of this code is the task.
     
-    constructor ( uint lastProposalID , uint _voteLimit, string memory _title, string memory _description ) {
+    constructor ( uint _voteLimit, string memory _title, string memory _description ) {
         owner = msg.sender;
-        proposal.currentProposalID = lastProposalID + 1;
         proposal.is_active = true;
         proposal.title = _title;
         proposal.description = _description;
         voteLimit = _voteLimit;
     }
+
 
     //Makes sure voting limit reached before ending vote
     modifier maxVote { 
@@ -45,10 +41,12 @@ contract ProposalContract {
         _;
     }
 
+
     modifier onlyOwner {
         require(msg.sender == owner, "Only owner authorized to call this.");
         _;
     }
+
 
     // Prevents double voting
     modifier Voted {
@@ -62,11 +60,13 @@ contract ProposalContract {
         _;
     }
 
+
     //Sets state of proposal to allow votes or not.
     modifier votingAllowed() {
         require(proposal.is_active, "Voting has ended.");
         _;
     }
+
 
     //Vote to approve proposal
     function approveVote() public Voted votingAllowed{
@@ -75,12 +75,14 @@ contract ProposalContract {
         
     }
 
+
     //Vote to reject proposal
      function rejectVote() public Voted votingAllowed{
         proposal.reject += 1;
         proposal.total_vote_to_end ++;
         
     }
+
 
     //Vote to pass vote
      function passVote () public Voted votingAllowed{
@@ -89,25 +91,30 @@ contract ProposalContract {
         
     }
 
+
     //For owner to end vote
     function endVote() public onlyOwner maxVote {
         proposal.is_active = false;
     }
+
 
     //Reveals vote limit
     function getVoteLimit () public view returns(uint) {
         return voteLimit;
     }
 
+
     //Reveals number of approved votes
     function getApprovedVoteCounts() public view returns(uint) {
         return proposal.approve;
     }
 
+
     // Reveals number of Passed votes
     function getPassedVoteCounts() public view returns(uint) {
         return proposal.pass;
     }
+
 
     //reveals number of rejected votes
     function getRejectedVoteCounts() public view returns(uint) {
