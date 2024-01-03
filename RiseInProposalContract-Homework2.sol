@@ -7,6 +7,7 @@ contract ProposalContract {
     uint voteLimit; //Reveals owners allowable max votes
     address public owner;
     address[] Voters; //Stores voters address
+    uint256 totalVotes;
 
 
     struct Proposal {
@@ -28,6 +29,7 @@ contract ProposalContract {
     
     constructor ( uint _voteLimit, string memory _title, string memory _description ) {
         owner = msg.sender;
+        Voters.push(msg.sender); //Prevents owner to vote. (Unless they trasnfer ownership)
         proposal.is_active = true;
         proposal.title = _title;
         proposal.description = _description;
@@ -60,6 +62,9 @@ contract ProposalContract {
         _;
     }
 
+    
+
+
 
     //Sets state of proposal to allow votes or not.
     modifier votingAllowed() {
@@ -69,7 +74,7 @@ contract ProposalContract {
 
 
     //Vote to approve proposal
-    function approveVote() public Voted votingAllowed{
+    function approveVote() public Voted votingAllowed {
         proposal.approve += 1;
         proposal.total_vote_to_end ++;
         
@@ -119,6 +124,31 @@ contract ProposalContract {
     //reveals number of rejected votes
     function getRejectedVoteCounts() public view returns(uint) {
         return proposal.reject;
+    }
+
+
+    // Added this to get total number of voters / votes.
+    function getTotalVotes() external view returns (uint) {
+        uint256 total_vote = proposal.approve + proposal.reject + proposal.pass;
+        return total_vote;
+    }
+
+
+    /* Function to transfer ownership of contract
+    The Voted modifier is to check if the address has voted already.
+    If yes, transfer of ownership not possible.
+    If no, address is added to Voters[] to prevent theri voting.
+    */ 
+    function transferOwnership(address _newOwner) external onlyOwner {
+        owner = _newOwner;
+        uint i;  // Declare `i`
+        for (i = 0; i < Voters.length; i++) {
+            if (owner == Voters[i]) {
+                revert("Voters cannot own this proposal.");
+            }
+        }
+        Voters.push(owner);  // Add owner to the list
+        
     }
 
 }
