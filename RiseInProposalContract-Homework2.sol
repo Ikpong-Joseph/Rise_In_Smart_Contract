@@ -37,7 +37,7 @@ contract ProposalContract {
 
     //Makes sure voting limit reached before ending vote
     modifier maxVote { 
-        require(proposal.total_vote_to_end >= voteLimit, "Maximum votes not yet reached.");
+        require(proposal.total_vote_to_end == voteLimit, "Maximum votes not yet reached.");
         _;
     }
 
@@ -60,9 +60,6 @@ contract ProposalContract {
         _;
     }
 
-    
-
-
 
     //Sets state of proposal to allow votes or not.
     modifier votingAllowed() {
@@ -75,6 +72,10 @@ contract ProposalContract {
     function approveVote() public Voted votingAllowed {
         proposal.approve += 1;
         proposal.total_vote_to_end ++;
+
+           if (proposal.total_vote_to_end == voteLimit) {
+            endVote(); // Automatically end vote if limit reached
+        }
         
     }
 
@@ -83,12 +84,20 @@ contract ProposalContract {
      function rejectVote() public Voted votingAllowed{
         proposal.reject += 1;
         proposal.total_vote_to_end ++;
+
+        if (proposal.total_vote_to_end == voteLimit) {
+            endVote(); // Automatically end vote if limit reached
+        }
         
     }
 
 
-    //For owner to end vote
-    function endVote() public onlyOwner maxVote {
+    /*
+    Automatically ends vote when
+    proposal.total_vote_to_end == voteLimit
+    callable by approve and reject vote functions
+    */
+    function endVote() private  {
         proposal.is_active = false;
     }
 
@@ -105,7 +114,6 @@ contract ProposalContract {
     }
 
 
-
     //reveals number of rejected votes
     function getRejectedVoteCounts() public view returns(uint) {
         return proposal.reject;
@@ -118,6 +126,28 @@ contract ProposalContract {
         return total_vote;
     }
 
+    /* Will retrieve whether a given address has voted or not.
+    Owner will return true since they were pushed to Voters[].
+    Drwback: Owner must watch close so total don't
+    */
+    function votedOrNot (address _address) public view returns (bool) {
+        for (uint i = 0; i < Voters.length; i++) {
+            if (Voters[i] == _address) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// true = approve votes > reject votes
+    function voteOutcome() external view returns(bool) {
+        if (proposal.approve > proposal.reject) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
     /* Function to transfer ownership of contract
     The Voted modifier is to check if the address has voted already.
@@ -128,6 +158,9 @@ contract ProposalContract {
         owner = _newOwner;
         uint i;  // Declare `i`
         for (i = 0; i < Voters.length; i++) {
+            if (msg.sender == Voters[i]) {
+                delete Voters[i]; // Remove msg.sender directly;
+            }
             if (owner == Voters[i]) {
                 revert("Voters cannot own this proposal.");
             }
@@ -136,4 +169,7 @@ contract ProposalContract {
         
     }
 
+    
 }
+
+
