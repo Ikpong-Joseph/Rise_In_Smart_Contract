@@ -15,9 +15,7 @@ contract ProposalContract {
         string description; // Description of the proposal
         uint256 approve; // Number of approve votes
         uint256 reject; // Number of reject votes
-        uint256 pass; // Number of pass votes
         uint256 total_vote_to_end; // When the total votes in the proposal reaches this limit, proposal ends
-        bool current_state; // This shows the current state of the proposal, meaning whether if passes of fails
         bool is_active; // This shows if others can vote to our contract
     
     }
@@ -89,14 +87,6 @@ contract ProposalContract {
     }
 
 
-    //Vote to pass vote
-     function passVote () public Voted votingAllowed{
-        proposal.pass += 1;
-        proposal.total_vote_to_end ++;
-        
-    }
-
-
     //For owner to end vote
     function endVote() public onlyOwner maxVote {
         proposal.is_active = false;
@@ -115,11 +105,6 @@ contract ProposalContract {
     }
 
 
-    // Reveals number of Passed votes
-    function getPassedVoteCounts() public view returns(uint) {
-        return proposal.pass;
-    }
-
 
     //reveals number of rejected votes
     function getRejectedVoteCounts() public view returns(uint) {
@@ -129,7 +114,7 @@ contract ProposalContract {
 
     // Added this to get total number of voters / votes.
     function getTotalVotes() external view returns (uint) {
-        uint256 total_vote = proposal.approve + proposal.reject + proposal.pass;
+        uint256 total_vote = proposal.approve + proposal.reject;
         return total_vote;
     }
 
